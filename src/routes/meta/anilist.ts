@@ -9,6 +9,7 @@ import cache from '../../utils/cache';
 import { redis } from '../../main';
 import NineAnime from '@consumet/extensions/dist/providers/anime/9anime';
 import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
+import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/', (_, rp) => {
@@ -410,8 +411,14 @@ const generateAnilistMeta = (provider: string | undefined = undefined): Anilist 
       url: process.env.PROXY as string | string[],
     });
   } else {
-    // default provider is Zoro
-    return new Anilist(new Zoro(), {
+    // default provider is Zoro; fallback to Gogoanime if Zoro initialization fails
+    let defaultProvider;
+    try {
+      defaultProvider = new Zoro();
+    } catch (e) {
+      defaultProvider = new Gogoanime();
+    }
+    return new Anilist(defaultProvider, {
       url: process.env.PROXY as string | string[],
     });
   }

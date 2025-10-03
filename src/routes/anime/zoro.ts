@@ -38,80 +38,98 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const query = (request.params as { query: string }).query;
 
     const page = (request.query as { page: number }).page;
-
-    const res = await zoro.search(query, page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.search(query, page);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get(
     '/recent-episodes',
     async (request: FastifyRequest, reply: FastifyReply) => {
       const page = (request.query as { page: number }).page;
-
-      const res = await zoro.fetchRecentlyUpdated(page);
-
-      reply.status(200).send(res);
+      try {
+        const res = await zoro.fetchRecentlyUpdated(page);
+        reply.status(200).send(res);
+      } catch (error) {
+        reply.status(500).send({ message: 'Provider failed' });
+      }
     },
   );
 
   fastify.get('/top-airing', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
-
-    const res = await zoro.fetchTopAiring(page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchTopAiring(page);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get('/most-popular', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
-
-    const res = await zoro.fetchMostPopular(page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchMostPopular(page);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get('/most-favorite', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
-
-    const res = await zoro.fetchMostFavorite(page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchMostFavorite(page);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get(
     '/latest-completed',
     async (request: FastifyRequest, reply: FastifyReply) => {
       const page = (request.query as { page: number }).page;
-
-      const res = await zoro.fetchLatestCompleted(page);
-
-      reply.status(200).send(res);
+      try {
+        const res = await zoro.fetchLatestCompleted(page);
+        reply.status(200).send(res);
+      } catch (error) {
+        reply.status(500).send({ message: 'Provider failed' });
+      }
     },
   );
 
   fastify.get('/recent-added', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
-
-    const res = await zoro.fetchRecentlyAdded(page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchRecentlyAdded(page);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get('/top-upcoming', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
-
-    const res = await zoro.fetchTopUpcoming(page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchTopUpcoming(page);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get('/schedule/:date', async (request: FastifyRequest, reply: FastifyReply) => {
     const date = (request.params as { date: string }).date;
-
-    const res = await zoro.fetchSchedule(date);
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchSchedule(date);
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get(
@@ -127,19 +145,24 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   );
 
   fastify.get('/spotlight', async (request: FastifyRequest, reply: FastifyReply) => {
-    const res = await zoro.fetchSpotlight();
-
-    reply.status(200).send(res);
+    try {
+      const res = await zoro.fetchSpotlight();
+      reply.status(200).send(res);
+    } catch (error) {
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get(
     '/search-suggestions/:query',
     async (request: FastifyRequest, reply: FastifyReply) => {
       const query = (request.params as { query: string }).query;
-
-      const res = await zoro.fetchSearchSuggestions(query);
-
-      reply.status(200).send(res);
+      try {
+        const res = await zoro.fetchSearchSuggestions(query);
+        reply.status(200).send(res);
+      } catch (error) {
+        reply.status(500).send({ message: 'Provider failed' });
+      }
     },
   );
 

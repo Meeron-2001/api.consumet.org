@@ -26,7 +26,6 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         '/popular',
         '/recent-episodes',
         '/anime-list',
-        '/download',
       ],
       documentation: 'https://docs.consumet.org/#tag/gogoanime',
     });
@@ -35,15 +34,21 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/:query', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = (request.params as { query: string }).query;
     const page = (request.query as { page: number }).page || 1;
+    try {
+      const res = redis
+        ? await cache.fetch(
+            redis as Redis,
+            `${redisPrefix}search;${page};${query}`,
+            async () => await gogoanime.search(query, page),
+            redisCacheTime,
+          )
+        : await gogoanime.search(query, page);
 
-    const res = redis ? await cache.fetch(
-      redis as Redis,
-      `${redisPrefix}search;${page};${query}`,
-      async () => await gogoanime.search(query, page),
-      redisCacheTime,
-    ) : await gogoanime.search(query, page);
-
-    reply.status(200).send(res);
+      reply.status(200).send(res);
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed' });
+    }
   });
 
   fastify.get('/info/:id', async (request: FastifyRequest, reply: FastifyReply) => {

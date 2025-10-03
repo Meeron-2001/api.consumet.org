@@ -11,7 +11,8 @@ import crunchyroll from './crunchyroll';
 import bilibili from './bilibili';
 import marin from './marin';
 import anix from './anix';
-import animekai from './animekai';
+// Disabled due to instability on Render: animekai often fails and crashes the server
+// import animekai from './animekai';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   await fastify.register(gogoanime, { prefix: '/gogoanime' });
@@ -24,7 +25,8 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   await fastify.register(bilibili, { prefix: '/bilibili' });
   await fastify.register(marin, { prefix: '/marin' });
   await fastify.register(anix, { prefix: '/anix' });
-  await fastify.register(animekai, { prefix: '/animekai' });
+  // Disabled due to instability on Render: animekai often fails and crashes the server
+  // await fastify.register(animekai, { prefix: '/animekai' });
 
   fastify.get('/', async (request: any, reply: any) => {
     reply.status(200).send('Welcome to Consumet Anime 🗾');
