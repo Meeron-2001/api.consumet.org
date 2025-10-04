@@ -7,6 +7,7 @@ import fs from 'fs';
 import books from './routes/books';
 import anime from './routes/anime';
 import manga from './routes/manga';
+import movies from './routes/movies';
 import comics from './routes/comics';
 import lightnovels from './routes/light-novels';
 import meta from './routes/meta';
@@ -83,6 +84,7 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
     fastify.listen({ port: PORT, host: '0.0.0.0' }, (e, address) => {
       if (e) throw e;
       console.log(`server listening on ${address}`);
+      console.log(`Server running on PORT ${PORT}`);
     });
   } catch (err: any) {
     process.exit(1);
