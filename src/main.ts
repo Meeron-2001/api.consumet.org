@@ -85,10 +85,10 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
       console.log(`server listening on ${address}`);
     });
   } catch (err: any) {
-    fastify.log.error(err);
     process.exit(1);
   }
 })();
 export default async function handler(req: any, res: any) {
   await fastify.ready();
   fastify.server.emit('request', req, res);
+}
