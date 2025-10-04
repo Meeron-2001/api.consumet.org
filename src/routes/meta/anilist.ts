@@ -333,7 +333,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
                 redis,
                 `anilist:watch;${episodeId};${anilist.provider.name.toLowerCase()};${server};${isDub ? 'dub' : 'sub'}`,
                 async () =>
-                  provider === 'zoro' || provider === 'animekai'
+                  provider === 'zoro'
                     ? await anilist.fetchEpisodeSources(
                       episodeId,
                       server,
@@ -346,7 +346,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
           : reply
             .status(200)
             .send(
-              provider === 'zoro' || provider === 'animekai'
+              provider === 'zoro'
                 ? await anilist.fetchEpisodeSources(
                   episodeId,
                   server,
