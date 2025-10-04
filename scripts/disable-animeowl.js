@@ -99,16 +99,32 @@ try {
   if (patchFile(PROVIDERS_LIST_PATH, (file) => {
     let content = fs.readFileSync(file, 'utf8');
     
-    // Remove AnimeOwl import
+    // Remove AnimeOwl require/import statements
     content = content.replace(/const\s+animeowl_\d+\s*=\s*require\(["']\.\.\/providers\/anime\/animeowl["']\);?\s*/gi, '');
     content = content.replace(/var\s+animeowl_\d+\s*=\s*require\(["']\.\.\/providers\/anime\/animeowl["']\);?\s*/gi, '');
+    content = content.replace(/import\s+.*?from\s+["']\.\.\/providers\/anime\/animeowl["'];?\s*/gi, '');
     
-    // Remove AnimeOwl from ANIME object
+    // Remove AnimeOwl from ANIME object/exports
     content = content.replace(/,?\s*AnimeOwl:\s*animeowl_\d+\.default/gi, '');
     content = content.replace(/AnimeOwl:\s*animeowl_\d+\.default\s*,?/gi, '');
+    content = content.replace(/,?\s*AnimeOwl:\s*\w+/gi, '');
+    content = content.replace(/AnimeOwl:\s*\w+\s*,?/gi, '');
     
-    // Clean up double commas
+    // Remove any new AnimeOwl() instantiation
+    content = content.replace(/new\s+providers_1\.ANIME\.AnimeOwl\(\)/gi, '');
+    content = content.replace(/new\s+\w+\.AnimeOwl\(\)/gi, '');
+    content = content.replace(/new\s+AnimeOwl\(\)/gi, '');
+    
+    // Remove AnimeOwl from arrays
+    content = content.replace(/,?\s*AnimeOwl\s*,?/gi, '');
+    content = content.replace(/\[\s*AnimeOwl\s*\]/gi, '[]');
+    
+    // Clean up double commas and trailing commas
     content = content.replace(/,\s*,/g, ',');
+    content = content.replace(/,\s*\}/g, '}');
+    content = content.replace(/,\s*\]/g, ']');
+    content = content.replace(/\{\s*,/g, '{');
+    content = content.replace(/\[\s*,/g, '[');
     
     fs.writeFileSync(file, content, 'utf8');
     const patched = fs.readFileSync(file, 'utf8');

@@ -83,7 +83,6 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
   });
 
   console.log(chalk.green(`Starting server on port ${PORT}... 🚀`));
-  console.log(chalk.green('✅ AnimeOwl provider fully removed; app will no longer call it.'));
   
   // Verify provider list is clean
   try {
@@ -95,6 +94,7 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
     if (hasAnimeOwl) {
       console.warn(chalk.yellowBright('⚠️  AnimeOwl still in PROVIDERS_LIST - filtering it out'));
     } else {
+      console.log(chalk.green('✅ AnimeOwl removed successfully from providers'));
       console.log(chalk.green(`✓  Provider list clean (${animeProviders.length} anime providers loaded)`));
     }
   } catch (e) {
