@@ -1,4 +1,45 @@
 require('dotenv').config();
+
+// AGGRESSIVE FIX: Monkey-patch AnimeOwl to prevent initialization crashes
+// This MUST run before any imports of @consumet/extensions
+try {
+  // Step 1: Stub out the AnimeOwl module to prevent any execution
+  const Module = require('module');
+  const originalRequire = Module.prototype.require;
+  
+  Module.prototype.require = function(id: string) {
+    // Intercept AnimeOwl imports and return a dummy class
+    if (id && typeof id === 'string' && id.includes('animeowl')) {
+      console.log('🛡️  Blocked AnimeOwl import:', id);
+      return {
+        default: class DummyAnimeOwl {
+          constructor() {}
+          fetchSpotlight() { return Promise.resolve([]); }
+          fetchRecentEpisodes() { return Promise.resolve([]); }
+        },
+        AnimeOwl: class DummyAnimeOwl {
+          constructor() {}
+          fetchSpotlight() { return Promise.resolve([]); }
+          fetchRecentEpisodes() { return Promise.resolve([]); }
+        }
+      };
+    }
+    return originalRequire.apply(this, arguments as any);
+  };
+
+  // Step 2: Remove AnimeOwl from PROVIDERS_LIST after extensions loads
+  const { PROVIDERS_LIST } = require('@consumet/extensions');
+  if (PROVIDERS_LIST && PROVIDERS_LIST.ANIME) {
+    const beforeCount = PROVIDERS_LIST.ANIME.length;
+    PROVIDERS_LIST.ANIME = PROVIDERS_LIST.ANIME.filter(
+      (p: any) => p.name && p.name.toLowerCase() !== 'animeowl'
+    );
+    console.log(`🛡️  AnimeOwl removed from PROVIDERS_LIST.ANIME (${beforeCount} -> ${PROVIDERS_LIST.ANIME.length})`);
+  }
+} catch (e) {
+  console.warn('Could not patch AnimeOwl:', e);
+}
+
 import Redis from 'ioredis';
 import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';

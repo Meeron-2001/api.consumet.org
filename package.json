@@ -3,6 +3,8 @@
     "version": "1.0.0",
     "main": "src/main.ts",
     "scripts": {
+        "postinstall": "node scripts/disable-animeowl.js",
+        "prebuild": "node scripts/disable-animeowl.js",
         "start": "node dist/main.js",
         "dev": "nodemon src/main.ts",
         "build": "tsc",

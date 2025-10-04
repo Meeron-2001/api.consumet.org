@@ -1,7 +1,72 @@
 # AnimeOwl Provider Removal Summary
 
 ## Overview
-This document confirms the complete removal of all AnimeOwl provider references from the Consumet API backend to prevent runtime crashes on Render.
+This document confirms the **AGGRESSIVE** removal of all AnimeOwl provider references from the Consumet API backend to prevent runtime crashes on Render.
+
+## TRIPLE-LAYER PROTECTION
+
+### Layer 1: Physical File Replacement (MOST AGGRESSIVE)
+
+**scripts/disable-animeowl.js** - Runs automatically on `postinstall` and `prebuild`
+
+This script physically overwrites `node_modules/@consumet/extensions/dist/providers/anime/animeowl.js` with a safe stub:
+
+```javascript
+class AnimeOwl {
+  fetchSpotlight() { return Promise.resolve({ error: 'AnimeOwl disabled', results: [] }); }
+  fetchTrending() { return Promise.resolve({ error: 'AnimeOwl disabled', results: [] }); }
+  // ... all methods return safe empty responses
+}
+```
+
+**package.json hooks:**
+```json
+"scripts": {
+  "postinstall": "node scripts/disable-animeowl.js",
+  "prebuild": "node scripts/disable-animeowl.js",
+  "build": "tsc"
+}
+```
+
+This ensures:
+- After every `npm install`, AnimeOwl is neutralized
+- Before every build, AnimeOwl is neutralized
+- The real animeowl.js code **never executes**
+
+### Layer 2: Module-Level Interception
+
+**src/main.ts (lines 3-41)** - Runtime require() interceptor
+
+Added a **module require interceptor** that runs BEFORE any other code:
+
+```typescript
+// Step 1: Stub out the AnimeOwl module to prevent any execution
+const Module = require('module');
+const originalRequire = Module.prototype.require;
+
+Module.prototype.require = function(id: string) {
+  // Intercept AnimeOwl imports and return a dummy class
+  if (id && typeof id === 'string' && id.includes('animeowl')) {
+    console.log('🛡️  Blocked AnimeOwl import:', id);
+    return {
+      default: class DummyAnimeOwl {
+        constructor() {}
+        fetchSpotlight() { return Promise.resolve([]); }
+        fetchRecentEpisodes() { return Promise.resolve([]); }
+      }
+    };
+  }
+  return originalRequire.apply(this, arguments);
+};
+
+// Step 2: Remove AnimeOwl from PROVIDERS_LIST after extensions loads
+const { PROVIDERS_LIST } = require('@consumet/extensions');
+PROVIDERS_LIST.ANIME = PROVIDERS_LIST.ANIME.filter(
+  (p: any) => p.name && p.name.toLowerCase() !== 'animeowl'
+);
+```
+
+**This intercepts ALL require() calls** and replaces any animeowl module with a safe dummy class that returns empty arrays instead of crashing.
 
 ## Changes Made
 
