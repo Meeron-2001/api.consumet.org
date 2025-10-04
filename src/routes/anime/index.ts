@@ -29,6 +29,11 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/', async (request: any, reply: any) => {
     reply.status(200).send('Welcome to Consumet Anime 🗾');
   });
+  // Diagnose AnimeOwl without importing it (no runtime crash)
+  fastify.get('/ping-animeowl', async (_: FastifyRequest, reply: FastifyReply) => {
+    // AnimeOwl is intentionally not loaded; report as unreachable in a controlled way
+    reply.status(200).send({ success: false, reachable: false, message: 'AnimeOwl disabled' });
+  });
 
   fastify.get('/:animeProvider', async (request: FastifyRequest, reply: FastifyReply) => {
     const queries: { animeProvider: string; page: number } = {
@@ -43,6 +48,12 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     queries.page = (request.query as { animeProvider: string; page: number }).page;
 
     if (queries.page! < 1) queries.page = 1;
+
+    // Special-case: if animeowl is requested, fallback to gogoanime
+    if (queries.animeProvider.toLowerCase() === 'animeowl') {
+      fastify.log.warn('AnimeOwl requested; falling back to gogoanime');
+      return reply.redirect('/anime/gogoanime');
+    }
 
     const provider = PROVIDERS_LIST.ANIME.find(
       (provider: any) => provider.toString.name === queries.animeProvider,
