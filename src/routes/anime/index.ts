@@ -56,7 +56,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
 
     const provider = PROVIDERS_LIST.ANIME.find(
-      (provider: any) => provider.toString.name === queries.animeProvider,
+      (provider: any) => provider.toString.name === queries.animeProvider && provider.toString.name.toLowerCase() !== 'animeowl',
     );
 
     try {

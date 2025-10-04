@@ -402,7 +402,7 @@ const generateAnilistMeta = (provider: string | undefined = undefined): Anilist 
     }
 
     let possibleProvider = PROVIDERS_LIST.ANIME.find(
-      (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
+      (p) => p.name.toLowerCase() === provider.toLocaleLowerCase() && p.name.toLowerCase() !== 'animeowl',
     );
 
     if (possibleProvider instanceof NineAnime) {

@@ -42,6 +42,7 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
   });
 
   console.log(chalk.green(`Starting server on port ${PORT}... 🚀`));
+  console.log(chalk.green('✅ AnimeOwl provider fully removed; app will no longer call it.'));
   if (!process.env.REDIS_HOST)
     console.warn(chalk.yellowBright('Redis not found. Cache disabled.'));
   if (!process.env.TMDB_KEY)
