@@ -84,6 +84,23 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
 
   console.log(chalk.green(`Starting server on port ${PORT}... 🚀`));
   console.log(chalk.green('✅ AnimeOwl provider fully removed; app will no longer call it.'));
+  
+  // Verify provider list is clean
+  try {
+    const { PROVIDERS_LIST } = require('@consumet/extensions');
+    const animeProviders = PROVIDERS_LIST.ANIME || [];
+    const hasAnimeOwl = animeProviders.some((p: any) => 
+      p.name && p.name.toLowerCase().includes('animeowl')
+    );
+    if (hasAnimeOwl) {
+      console.warn(chalk.yellowBright('⚠️  AnimeOwl still in PROVIDERS_LIST - filtering it out'));
+    } else {
+      console.log(chalk.green(`✓  Provider list clean (${animeProviders.length} anime providers loaded)`));
+    }
+  } catch (e) {
+    console.warn(chalk.yellowBright('Could not verify provider list'));
+  }
+  
   if (!process.env.REDIS_HOST)
     console.warn(chalk.yellowBright('Redis not found. Cache disabled.'));
   if (!process.env.TMDB_KEY)

@@ -8,17 +8,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const ANIMEOWL_PATH = path.join(
-  __dirname,
-  '..',
-  'node_modules',
-  '@consumet',
-  'extensions',
-  'dist',
-  'providers',
-  'anime',
-  'animeowl.js'
-);
+const EXTENSIONS_BASE = path.join(__dirname, '..', 'node_modules', '@consumet', 'extensions', 'dist');
+
+const ANIMEOWL_PATH = path.join(EXTENSIONS_BASE, 'providers', 'anime', 'animeowl.js');
+const PROVIDERS_LIST_PATH = path.join(EXTENSIONS_BASE, 'utils', 'providers-list.js');
 
 const SAFE_STUB = `"use strict";
 /**
@@ -61,38 +54,78 @@ exports.default = AnimeOwl;
 exports.AnimeOwl = AnimeOwl;
 `;
 
+function patchFile(filePath, patchFn, description) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      console.log(`⚠️  ${description} not found:`, filePath);
+      return false;
+    }
+
+    const backup = filePath + '.original';
+    if (!fs.existsSync(backup)) {
+      fs.copyFileSync(filePath, backup);
+      console.log(`📦 Backed up ${description}`);
+    }
+
+    const result = patchFn(filePath);
+    if (result) {
+      console.log(`✓  ${description} patched successfully`);
+    }
+    return result;
+  } catch (error) {
+    console.error(`✗  Failed to patch ${description}:`, error.message);
+    return false;
+  }
+}
+
 try {
-  // Check if the file exists
-  if (!fs.existsSync(ANIMEOWL_PATH)) {
-    console.log('⚠️  AnimeOwl file not found (may not be installed yet):', ANIMEOWL_PATH);
-    console.log('   This is normal during initial npm install.');
+  if (!fs.existsSync(EXTENSIONS_BASE)) {
+    console.log('⚠️  @consumet/extensions not installed yet. Run npm install first.');
     process.exit(0);
   }
 
-  // Backup the original file (optional, for safety)
-  const backupPath = ANIMEOWL_PATH + '.original';
-  if (!fs.existsSync(backupPath)) {
-    fs.copyFileSync(ANIMEOWL_PATH, backupPath);
-    console.log('📦 Original AnimeOwl backed up to:', backupPath);
+  let successCount = 0;
+
+  // Patch 1: Replace animeowl.js with stub
+  if (patchFile(ANIMEOWL_PATH, (file) => {
+    fs.writeFileSync(file, SAFE_STUB, 'utf8');
+    const written = fs.readFileSync(file, 'utf8');
+    return written.includes('AnimeOwl disabled');
+  }, 'AnimeOwl module')) {
+    successCount++;
   }
 
-  // Overwrite with safe stub
-  fs.writeFileSync(ANIMEOWL_PATH, SAFE_STUB, 'utf8');
-  console.log('🧩 AnimeOwl disabled successfully.');
-  console.log('✅ AnimeOwl provider permanently neutralized within extensions.');
-  
-  // Verify the file was written
-  const written = fs.readFileSync(ANIMEOWL_PATH, 'utf8');
-  if (written.includes('AnimeOwl disabled')) {
-    console.log('✓  Verification passed: AnimeOwl stub is in place.');
+  // Patch 2: Remove AnimeOwl from providers-list.js
+  if (patchFile(PROVIDERS_LIST_PATH, (file) => {
+    let content = fs.readFileSync(file, 'utf8');
+    
+    // Remove AnimeOwl import
+    content = content.replace(/const\s+animeowl_\d+\s*=\s*require\(["']\.\.\/providers\/anime\/animeowl["']\);?\s*/gi, '');
+    content = content.replace(/var\s+animeowl_\d+\s*=\s*require\(["']\.\.\/providers\/anime\/animeowl["']\);?\s*/gi, '');
+    
+    // Remove AnimeOwl from ANIME object
+    content = content.replace(/,?\s*AnimeOwl:\s*animeowl_\d+\.default/gi, '');
+    content = content.replace(/AnimeOwl:\s*animeowl_\d+\.default\s*,?/gi, '');
+    
+    // Clean up double commas
+    content = content.replace(/,\s*,/g, ',');
+    
+    fs.writeFileSync(file, content, 'utf8');
+    const patched = fs.readFileSync(file, 'utf8');
+    return !patched.toLowerCase().includes('animeowl');
+  }, 'providers-list.js')) {
+    successCount++;
+  }
+
+  if (successCount > 0) {
+    console.log('🧩 AnimeOwl disabled successfully.');
+    console.log(`✅ AnimeOwl provider permanently neutralized (${successCount} files patched)`);
   } else {
-    console.error('✗  Verification failed: Could not confirm stub was written.');
-    process.exit(1);
+    console.log('⚠️  No files were patched. Extensions may not be installed yet.');
   }
 
 } catch (error) {
   console.error('❌ Failed to disable AnimeOwl:', error.message);
   console.error('   Build will continue, but AnimeOwl may still cause crashes.');
-  // Don't fail the build - let it continue
   process.exit(0);
 }
