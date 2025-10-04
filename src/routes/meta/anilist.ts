@@ -393,6 +393,14 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
 const generateAnilistMeta = (provider: string | undefined = undefined): Anilist => {
   if (typeof provider !== 'undefined') {
+    // Block AnimeOwl to prevent runtime crashes
+    if (provider.toLowerCase() === 'animeowl') {
+      console.warn('AnimeOwl requested in meta; falling back to Gogoanime');
+      return new META.Anilist(new Gogoanime(), {
+        url: process.env.PROXY as string | string[],
+      });
+    }
+
     let possibleProvider = PROVIDERS_LIST.ANIME.find(
       (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
     );
