@@ -202,7 +202,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       const zoro = await createZoro();
       const res = await zoro
         .fetchAnimeInfo(id)
-        .catch((err) => reply.status(404).send({ message: err }));
+        .catch((err: any) => reply.status(404).send({ message: err }));
 
       return reply.status(200).send(res);
     } catch (error: any) {
@@ -235,7 +235,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
           server,
           dub === true ? SubOrSub.DUB : SubOrSub.SUB,
         )
-        .catch((err) => reply.status(404).send({ message: err }));
+        .catch((err: any) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
     } catch (error: any) {

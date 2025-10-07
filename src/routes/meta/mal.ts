@@ -1,10 +1,15 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import Myanimelist from '@consumet/extensions/dist/providers/meta/myanimelist';
+// Use dynamic import to avoid compile-time type resolution and eager loading
 import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
 import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  let mal = new Myanimelist();
+  const createMAL = async (provider?: any) => {
+    // @ts-ignore - dynamic import path lacks type declarations in some envs
+    const mod: any = await import('@consumet/extensions/dist/providers/meta/myanimelist');
+    const Myanimelist = mod.default || mod.Myanimelist || mod;
+    return new Myanimelist(provider);
+  };
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
@@ -21,6 +26,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const page = (request.query as { page: number }).page;
     const perPage = (request.query as { perPage: number }).perPage;
 
+    const mal = await createMAL();
     const res = await mal.search(query, page);
 
     reply.status(200).send(res);
@@ -35,12 +41,13 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     let isDub = (request.query as { dub?: string | boolean }).dub;
     const locale = (request.query as { locale?: string }).locale;
 
+    let mal = await createMAL();
     if (typeof provider !== 'undefined') {
       const name = provider.toLowerCase();
       const selected = name === 'gogoanime'
         ? new Gogoanime(process.env.GOGOANIME_URL)
         : new Zoro(process.env.ZORO_URL);
-      mal = new Myanimelist(selected);
+      mal = await createMAL(selected);
     }
 
     if (isDub === 'true' || isDub === '1') isDub = true;
@@ -51,8 +58,6 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
     try {
       const res = await mal.fetchAnimeInfo(id, isDub as boolean, fetchFiller as boolean);
-
-      mal = new Myanimelist(undefined);
       reply.status(200).send(res);
     } catch (err: any) {
       reply.status(500).send({ message: err.message });
@@ -64,22 +69,20 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     async (request: FastifyRequest, reply: FastifyReply) => {
       const episodeId = (request.params as { episodeId: string }).episodeId;
       const provider = (request.query as { provider?: string }).provider;
-
+      let mal = await createMAL();
       if (typeof provider !== 'undefined') {
         const name = provider.toLowerCase();
         const selected = name === 'gogoanime'
           ? new Gogoanime(process.env.GOGOANIME_URL)
           : new Zoro(process.env.ZORO_URL);
-        mal = new META.Myanimelist(selected);
+        mal = await createMAL(selected);
       }
       try {
         const res = await mal
           .fetchEpisodeSources(episodeId)
-          .catch((err) => reply.status(404).send({ message: err }));
-
-        mal = new META.Myanimelist(undefined);
+          .catch((err: any) => reply.status(404).send({ message: err }));
         reply.status(200).send(res);
-      } catch (err) {
+      } catch (err: any) {
         reply
           .status(500)
           .send({ message: 'Something went wrong. Contact developer for help.' });
