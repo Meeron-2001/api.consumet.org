@@ -36,7 +36,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await anilist
         .fetchMangaInfo(id)
-        .catch((err) => reply.status(404).send({ message: err }));
+        .catch((err: any) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
       anilist = await createAnilistManga();

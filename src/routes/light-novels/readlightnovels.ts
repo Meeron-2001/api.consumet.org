@@ -39,7 +39,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await readlightnovels
         .fetchLightNovelInfo(id, chapterPage)
-        .catch((err) => reply.status(404).send({ message: err }));
+        .catch((err: any) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
     } catch (err) {
@@ -61,7 +61,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await readlightnovels
         .fetchChapterContent(chapterId)
-        .catch((err) => reply.status(404).send(err));
+        .catch((err: any) => reply.status(404).send(err));
 
       reply.status(200).send(res);
     } catch (err) {

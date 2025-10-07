@@ -35,16 +35,15 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await mangadex
         .fetchMangaInfo(id)
-        .catch((err) => reply.status(404).send({ message: err }));
+        .catch((err: any) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
-    } catch (err) {
+    } catch (err: any) {
       reply
         .status(500)
         .send({ message: 'Something went wrong. Please try again later.' });
     }
   });
-
   fastify.get(
     '/read/:chapterId',
     async (request: FastifyRequest, reply: FastifyReply) => {

@@ -48,7 +48,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await dramacool
         .fetchMediaInfo(id)
-        .catch((err) => reply.status(404).send({ message: err }));
+        .catch((err: any) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
     } catch (err) {
@@ -69,7 +69,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await dramacool
         .fetchEpisodeSources(episodeId,server)
-        .catch((err) => reply.status(404).send({ message: 'Media Not found.' }));
+        .catch((err: any) => reply.status(404).send({ message: 'Media Not found.' }));
 
       reply.status(200).send(res);
     } catch (err) {
