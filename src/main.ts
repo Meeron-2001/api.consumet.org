@@ -41,6 +41,8 @@ if (!process.env.TMDB_READ_ACCESS_TOKEN) {
 
   (async () => {
   const PORT = Number(process.env.PORT) || 10000;
+  // Required startup log
+  console.log('Server running on PORT', process.env.PORT || 10000);
 
   await fastify.register(FastifyCors, {
     origin: process.env.CORS_ORIGIN
@@ -93,12 +95,16 @@ if (!process.env.TMDB_READ_ACCESS_TOKEN) {
     });
 
     fastify.listen({ port: PORT, host: '0.0.0.0' }, (e, address) => {
-      if (e) throw e;
+      if (e) {
+        console.error('Fastify listen failed:', e?.message || e);
+        return;
+      }
       console.log(`server listening on ${address}`);
       console.log(`Server running on PORT ${PORT}`);
     });
   } catch (err: any) {
-    process.exit(1);
+    console.error('Startup error:', err?.message || err);
+    // Do not exit; keep process alive even if a provider or route fails to register
   }
 })();
 export default async function handler(req: any, res: any) {

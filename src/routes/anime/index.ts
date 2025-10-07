@@ -15,8 +15,16 @@ import zoro from './zoro';
 // import anix from './anix';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  await fastify.register(gogoanime, { prefix: '/gogoanime' });
-  await fastify.register(zoro, { prefix: '/zoro' });
+  try {
+    await fastify.register(gogoanime, { prefix: '/gogoanime' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register gogoanime routes');
+  }
+  try {
+    await fastify.register(zoro, { prefix: '/zoro' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register zoro routes');
+  }
   // await fastify.register(animepahe, { prefix: '/animepahe' });
   // await fastify.register(nineanime, { prefix: '/9anime' });
   // await fastify.register(animefox, { prefix: '/animefox' });
