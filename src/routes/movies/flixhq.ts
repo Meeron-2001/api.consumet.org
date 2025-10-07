@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { MOVIES } from '@consumet/extensions';
+// Avoid aggregated imports to prevent eager loading of unrelated providers
 import { StreamingServers } from '@consumet/extensions/dist/models';
 
 import cache from '../../utils/cache';
@@ -7,7 +7,13 @@ import { redis } from '../../main';
 import { Redis } from 'ioredis';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const flixhq = new MOVIES.FlixHQ();
+  const createFlixHQ = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/movies/flixhq');
+    const FlixHQ = mod.default || mod.FlixHQ || mod;
+    return new FlixHQ();
+  };
+  const flixhq = await createFlixHQ();
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({

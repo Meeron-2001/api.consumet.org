@@ -1,10 +1,14 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META } from '@consumet/extensions';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  // TODO: Allocate new provider per request rather
-  // than global
-  let anilist = new META.Anilist.Manga();
+  // dynamic factory to avoid loading entire extensions index
+  const createAnilistManga = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/meta/anilist-manga');
+    const AnilistManga = mod.default || mod.Manga || mod;
+    return new AnilistManga();
+  };
+  let anilist = await createAnilistManga();
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
@@ -35,7 +39,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .catch((err) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
-      anilist = new META.Anilist.Manga();
+      anilist = await createAnilistManga();
     } catch (err) {
       reply
         .status(500)
@@ -54,8 +58,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       const res = await anilist
         .fetchChapterPages(chapterId)
         .catch((err: Error) => reply.status(404).send({ message: err.message }));
-
-      anilist = new META.Anilist.Manga();
+      anilist = await createAnilistManga();
       reply.status(200).send(res);
     } catch (err) {
       reply

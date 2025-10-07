@@ -1,14 +1,30 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
 
-import anilist from './anilist';
-import anilistManga from './anilist-manga';
-import mal from './mal';
-import tmdb from './tmdb';
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  await fastify.register(anilist, { prefix: '/anilist' });
-  await fastify.register(anilistManga, { prefix: '/anilist-manga' });
-  await fastify.register(mal, { prefix: '/mal' });
-  await fastify.register(tmdb, { prefix: '/tmdb' });
+  try {
+    const mod = await import('./anilist');
+    await fastify.register(mod.default, { prefix: '/anilist' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register meta/anilist');
+  }
+  try {
+    const mod = await import('./anilist-manga');
+    await fastify.register(mod.default, { prefix: '/anilist-manga' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register meta/anilist-manga');
+  }
+  try {
+    const mod = await import('./mal');
+    await fastify.register(mod.default, { prefix: '/mal' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register meta/mal');
+  }
+  try {
+    const mod = await import('./tmdb');
+    await fastify.register(mod.default, { prefix: '/tmdb' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register meta/tmdb');
+  }
 
   fastify.get('/', async (request: any, reply: any) => {
     reply.status(200).send('Welcome to Consumet Meta');

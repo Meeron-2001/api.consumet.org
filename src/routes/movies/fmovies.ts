@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { MOVIES } from '@consumet/extensions';
+// Avoid aggregated imports to prevent eager loading of unrelated providers
 import { StreamingServers } from '@consumet/extensions/dist/models';
 
 import cache from '../../utils/cache';
@@ -7,13 +7,17 @@ import { redis } from '../../main';
 import { Redis } from 'ioredis';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const fmovies = new MOVIES.Fmovies(
-    process.env.NINE_ANIME_HELPER_URL,
-    {
-      url: process.env.NINE_ANIME_PROXY as string,
-    },
-    process.env?.NINE_ANIME_HELPER_KEY,
-  );
+  const createFmovies = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/movies/fmovies');
+    const Fmovies = mod.default || mod.Fmovies || mod;
+    return new Fmovies(
+      process.env.NINE_ANIME_HELPER_URL,
+      { url: process.env.NINE_ANIME_PROXY as string },
+      process.env?.NINE_ANIME_HELPER_KEY,
+    );
+  };
+  const fmovies = await createFmovies();
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({

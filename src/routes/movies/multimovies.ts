@@ -1,9 +1,15 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { MOVIES } from '@consumet/extensions';
+// Avoid aggregated imports to prevent eager loading of unrelated providers
 import { StreamingServers } from '@consumet/extensions/dist/models';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const multimovies = new MOVIES.MultiMovies(process.env.MULTIMOVIES_URL);
+  const createMultiMovies = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/movies/multimovies');
+    const MultiMovies = mod.default || mod.MultiMovies || mod;
+    return new MultiMovies(process.env.MULTIMOVIES_URL);
+  };
+  const multimovies = await createMultiMovies();
   let baseUrl = 'https://multimovies.life';
   if (process.env.MULTIMOVIES_URL) {
     baseUrl = `https://${process.env.MULTIMOVIES_URL}`;

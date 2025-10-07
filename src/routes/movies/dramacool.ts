@@ -1,9 +1,15 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { MOVIES } from '@consumet/extensions';
+// Avoid aggregated imports to prevent eager loading of unrelated providers
 import { StreamingServers } from '@consumet/extensions/dist/models';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const dramacool = new MOVIES.DramaCool();
+  const createDramaCool = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/movies/dramacool');
+    const DramaCool = mod.default || mod.DramaCool || mod;
+    return new DramaCool();
+  };
+  const dramacool = await createDramaCool();
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({

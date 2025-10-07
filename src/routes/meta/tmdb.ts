@@ -1,8 +1,15 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META } from '@consumet/extensions';
+// Avoid aggregated imports to prevent eager loading of unrelated providers
 import { StreamingServers } from '@consumet/extensions/dist/models';
 import { tmdbApi } from '../../main';
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
+  const createTMDB = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/meta/tmdb');
+    const TMDB = mod.default || mod.TMDB || mod;
+    return new TMDB(tmdbApi);
+  };
+
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
       intro:
@@ -15,7 +22,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/:query', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = (request.params as { query: string }).query;
     const page = (request.query as { page: number }).page;
-    const tmdb = new META.TMDB(tmdbApi);
+    const tmdb = await createTMDB();
 
     try {
       const res = await tmdb.search(query, page);
@@ -30,7 +37,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const id = (request.params as { id: string }).id;
     const type = (request.query as { type: string }).type;
     const provider = (request.query as { provider?: string }).provider;
-    let tmdb = new META.TMDB(tmdbApi);
+    let tmdb = await createTMDB();
 
     if (!type) return reply.status(400).send({ message: "The 'type' query is required" });
 
@@ -58,7 +65,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
     const page = (request.query as { page?: number }).page || 1;
 
-    const tmdb = new META.TMDB(tmdbApi);
+    const tmdb = await createTMDB();
 
     try {
       const res = await tmdb.fetchTrending(type, timePeriod, page);
@@ -77,7 +84,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const provider = (request.query as { provider?: string }).provider;
     const server = (request.query as { server?: StreamingServers }).server;
 
-    let tmdb = new META.TMDB(tmdbApi);
+    let tmdb = await createTMDB();
     try {
       const res = await tmdb.fetchEpisodeSources(episodeId, id, server);
       reply.status(200).send(res);

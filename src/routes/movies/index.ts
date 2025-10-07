@@ -1,23 +1,55 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
 
-import flixhq from './flixhq';
-import viewasian from './viewasian';
-import dramacool from './dramacool';
-import fmovies from './fmovies';
-import goku from './goku';
-import movieshd from './movieshd';
-import sflix from './sflix';
-import multimovies from './multimovies';
-
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  await fastify.register(flixhq, { prefix: '/flixhq' });
-  await fastify.register(viewasian, { prefix: '/viewasian' });
-  await fastify.register(dramacool, { prefix: '/dramacool' });
-  await fastify.register(fmovies, { prefix: '/fmovies' });
-  await fastify.register(goku, { prefix: '/goku' });
-  await fastify.register(movieshd, { prefix: '/movieshd' });
-  await fastify.register(sflix, { prefix: '/sflix' });
-  await fastify.register(multimovies, { prefix: '/multimovies' });
+  // Dynamically import and register each provider to prevent eager loading
+  try {
+    const mod = await import('./flixhq');
+    await fastify.register(mod.default, { prefix: '/flixhq' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register flixhq');
+  }
+  try {
+    const mod = await import('./viewasian');
+    await fastify.register(mod.default, { prefix: '/viewasian' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register viewasian');
+  }
+  try {
+    const mod = await import('./dramacool');
+    await fastify.register(mod.default, { prefix: '/dramacool' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register dramacool');
+  }
+  try {
+    const mod = await import('./fmovies');
+    await fastify.register(mod.default, { prefix: '/fmovies' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register fmovies');
+  }
+  try {
+    const mod = await import('./goku');
+    await fastify.register(mod.default, { prefix: '/goku' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register goku');
+  }
+  try {
+    const mod = await import('./movieshd');
+    await fastify.register(mod.default, { prefix: '/movieshd' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register movieshd');
+  }
+  try {
+    const mod = await import('./sflix');
+    await fastify.register(mod.default, { prefix: '/sflix' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register sflix');
+  }
+  try {
+    const mod = await import('./multimovies');
+    await fastify.register(mod.default, { prefix: '/multimovies' });
+  } catch (e: any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register multimovies');
+  }
 
   fastify.get('/', async (request: any, reply: any) => {
     reply.status(200).send('Welcome to Consumet Movies and TV Shows');

@@ -1,8 +1,12 @@
-import { BOOKS } from '@consumet/extensions';
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const libgen = new BOOKS.Libgen();
+  const createLibgen = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/books/libgen');
+    const Libgen = mod.default || mod.Libgen || mod;
+    return new Libgen();
+  };
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
@@ -30,6 +34,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       });
     }
     try {
+      const libgen = await createLibgen();
       const data = await libgen.search(bookTitle, page);
       return reply.status(200).send(data);
     } catch (e) {

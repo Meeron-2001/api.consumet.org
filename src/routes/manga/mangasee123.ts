@@ -1,8 +1,14 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { MANGA } from '@consumet/extensions';
+// Avoid aggregated imports to prevent eager loading of unrelated providers
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const mangasee123 = new MANGA.Mangasee123();
+  const createMangasee = async () => {
+    // @ts-ignore: dynamic import path, types may not be present in env
+    const mod: any = await import('@consumet/extensions/dist/providers/manga/mangasee123');
+    const Mangasee123 = mod.default || mod.Mangasee123 || mod;
+    return new Mangasee123();
+  };
+  const mangasee123 = await createMangasee();
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
