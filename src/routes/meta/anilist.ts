@@ -1,6 +1,5 @@
 import { Redis } from 'ioredis';
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META } from '@consumet/extensions';
 import { Genres, SubOrSub } from '@consumet/extensions/dist/models';
 import Anilist from '@consumet/extensions/dist/providers/meta/anilist';
 import { StreamingServers } from '@consumet/extensions/dist/models';
@@ -430,7 +429,7 @@ const generateAnilistMeta = (provider: string | undefined = undefined): Anilist 
     }
   }
 
-  return new META.Anilist(selected, {
+  return new Anilist(selected, {
     url: process.env.PROXY as string | string[],
   });
 };

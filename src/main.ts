@@ -6,16 +6,7 @@ import Redis from 'ioredis';
 import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
 
-import books from './routes/books';
-import anime from './routes/anime';
-import manga from './routes/manga';
-import movies from './routes/movies';
-import comics from './routes/comics';
-import lightnovels from './routes/light-novels';
-import meta from './routes/meta';
-import news from './routes/news';
 import chalk from 'chalk';
-import Utils from './utils';
 
 export const redis =
   (process.env.REDIS_URI && new Redis(process.env.REDIS_URI)) ||
@@ -63,16 +54,55 @@ if (!process.env.TMDB_READ_ACCESS_TOKEN) {
       chalk.yellowBright('TMDB api key not found. the TMDB meta route may not work.'),
     );
 
-  await fastify.register(books, { prefix: '/books' });
-  await fastify.register(anime, { prefix: '/anime' });
-  await fastify.register(manga, { prefix: '/manga' });
-  //await fastify.register(comics, { prefix: '/comics' });
-  await fastify.register(lightnovels, { prefix: '/light-novels' });
-  await fastify.register(movies, { prefix: '/movies' });
-  await fastify.register(meta, { prefix: '/meta' });
-  await fastify.register(news, { prefix: '/news' });
-
-  await fastify.register(Utils, { prefix: '/utils' });
+  // Dynamically import route modules so failures do not crash startup
+  try {
+    const mod = await import('./routes/anime');
+    await fastify.register(mod.default, { prefix: '/anime' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register anime routes');
+  }
+  try {
+    const mod = await import('./routes/meta');
+    await fastify.register(mod.default, { prefix: '/meta' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register meta routes');
+  }
+  try {
+    const mod = await import('./routes/manga');
+    await fastify.register(mod.default, { prefix: '/manga' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register manga routes');
+  }
+  try {
+    const mod = await import('./routes/movies');
+    await fastify.register(mod.default, { prefix: '/movies' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register movies routes');
+  }
+  try {
+    const mod = await import('./routes/books');
+    await fastify.register(mod.default, { prefix: '/books' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register books routes');
+  }
+  try {
+    const mod = await import('./routes/light-novels');
+    await fastify.register(mod.default, { prefix: '/light-novels' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register light-novels routes');
+  }
+  try {
+    const mod = await import('./routes/news');
+    await fastify.register(mod.default, { prefix: '/news' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register news routes');
+  }
+  try {
+    const mod = await import('./utils');
+    await fastify.register(mod.default, { prefix: '/utils' });
+  } catch (e:any) {
+    fastify.log.error({ err: e?.message || e }, 'Failed to register utils routes');
+  }
 
   // Healthcheck for Render
   fastify.get('/health', async (_, reply) => {

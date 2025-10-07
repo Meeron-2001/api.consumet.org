@@ -1,10 +1,10 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META } from '@consumet/extensions';
+import Myanimelist from '@consumet/extensions/dist/providers/meta/myanimelist';
 import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
 import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  let mal = new META.Myanimelist();
+  let mal = new Myanimelist();
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
@@ -40,7 +40,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       const selected = name === 'gogoanime'
         ? new Gogoanime(process.env.GOGOANIME_URL)
         : new Zoro(process.env.ZORO_URL);
-      mal = new META.Myanimelist(selected);
+      mal = new Myanimelist(selected);
     }
 
     if (isDub === 'true' || isDub === '1') isDub = true;
@@ -52,7 +52,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await mal.fetchAnimeInfo(id, isDub as boolean, fetchFiller as boolean);
 
-      mal = new META.Myanimelist(undefined);
+      mal = new Myanimelist(undefined);
       reply.status(200).send(res);
     } catch (err: any) {
       reply.status(500).send({ message: err.message });
