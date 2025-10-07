@@ -41,8 +41,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.search(query, page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -53,8 +54,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       try {
         const res = await zoro.fetchRecentlyUpdated(page);
         reply.status(200).send(res);
-      } catch (error) {
-        reply.status(500).send({ message: 'Provider failed' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
       }
     },
   );
@@ -64,8 +66,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchTopAiring(page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -74,8 +77,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchMostPopular(page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -84,8 +88,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchMostFavorite(page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -96,8 +101,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       try {
         const res = await zoro.fetchLatestCompleted(page);
         reply.status(200).send(res);
-      } catch (error) {
-        reply.status(500).send({ message: 'Provider failed' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
       }
     },
   );
@@ -107,8 +113,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchRecentlyAdded(page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -117,8 +124,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchTopUpcoming(page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -127,8 +135,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchSchedule(date);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -148,8 +157,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchSpotlight();
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({ message: 'Provider failed' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -160,8 +170,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       try {
         const res = await zoro.fetchSearchSuggestions(query);
         reply.status(200).send(res);
-      } catch (error) {
-        reply.status(500).send({ message: 'Provider failed' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
       }
     },
   );
@@ -178,10 +189,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .catch((err) => reply.status(404).send({ message: err }));
 
       return reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
   const watch = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -211,10 +221,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .catch((err) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   };
   fastify.get('/watch', watch);
@@ -224,10 +233,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchGenres();
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({
-        message: 'Something went wrong. Contact developer for help.',
-      });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -241,10 +249,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.genreSearch(genre, page);
       reply.status(200).send(res);
-    } catch (error) {
-      reply.status(500).send({
-        message: 'Something went wrong. Contact developer for help.',
-      });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -253,10 +260,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchMovie(page);
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -265,10 +271,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchONA(page);
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -277,10 +282,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchOVA(page);
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -289,10 +293,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchSpecial(page);
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -301,10 +304,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     try {
       const res = await zoro.fetchTV(page);
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 };

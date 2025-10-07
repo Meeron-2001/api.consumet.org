@@ -45,9 +45,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         : await gogoanime.search(query, page);
 
       reply.status(200).send(res);
-    } catch (error) {
+    } catch (error: any) {
       fastify.log.error(error);
-      reply.status(500).send({ message: 'Provider failed' });
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -67,10 +67,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       .catch((err) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Please try again later.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -90,10 +89,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       .fetchGenreInfo(genre, page)
       .catch((err) => reply.status(404).send({ message: err }));
       reply.status(200).send(res);
-    } catch {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Please try again later.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -111,10 +109,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       .fetchGenreList()
       .catch((err) => reply.status(404).send({ message: err }));
       reply.status(200).send(res);
-    } catch {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Please try again later.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -141,10 +138,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .catch((err) => reply.status(404).send({ message: err }));
 
         reply.status(200).send(res);
-      } catch (err) {
-        reply
-          .status(500)
-          .send({ message: 'Something went wrong. Please try again later.' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
       }
     },
   );
@@ -187,10 +183,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       ) : await gogoanime.fetchTopAiring(page);
 
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developers for help.' });
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
     }
   });
 
@@ -247,10 +242,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         ) : await gogoanime.fetchRecentEpisodes(page, type);
 
         reply.status(200).send(res);
-      } catch (err) {
-        reply
-          .status(500)
-          .send({ message: 'Something went wrong. Contact developers for help.' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
       }
     },
   );
@@ -270,10 +264,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
           : await gogoanime.fetchAnimeList(page);
 
         reply.status(200).send(res);
-      } catch (err) {
-        reply
-          .status(500)
-          .send({ message: 'Something went wrong. Contact developers for help.' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        reply.status(500).send({ message: 'Provider failed: ' + (error?.message || String(error)) });
       }
     },
   );

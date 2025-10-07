@@ -43,6 +43,7 @@ if (!process.env.TMDB_READ_ACCESS_TOKEN) {
   const PORT = Number(process.env.PORT) || 10000;
   // Required startup log
   console.log('Server running on PORT', process.env.PORT || 10000);
+  console.log('✅ Using Zoro as primary provider');
 
   await fastify.register(FastifyCors, {
     origin: process.env.CORS_ORIGIN
