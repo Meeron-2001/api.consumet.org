@@ -16,26 +16,17 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   });
 
   fastify.get('/:metaProvider', async (request: FastifyRequest, reply: FastifyReply) => {
-    const queries: { metaProvider: string; page: number } = {
-      metaProvider: '',
-      page: 1,
-    };
-
-    queries.metaProvider = decodeURIComponent(
-      (request.params as { metaProvider: string; page: number }).metaProvider,
-    );
-
-    queries.page = (request.query as { metaProvider: string; page: number }).page;
-
-    if (queries.page! < 1) queries.page = 1;
+    const metaProvider = decodeURIComponent(
+      (request.params as { metaProvider: string }).metaProvider,
+    ).toLowerCase();
 
     const provider = PROVIDERS_LIST.META.find(
-      (provider: any) => provider.toString.name === queries.metaProvider,
+      (p: any) => p.toString.name && p.toString.name.toLowerCase() === metaProvider,
     );
 
     try {
       if (provider) {
-        reply.redirect(`/anime/${provider.toString.name}`);
+        reply.redirect(`/meta/${provider.toString.name}`);
       } else {
         reply
           .status(404)

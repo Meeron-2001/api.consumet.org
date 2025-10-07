@@ -34,9 +34,9 @@ export default class Providers {
       },
       async (request: ProvidersRequest, reply: FastifyReply) => {
         const { type } = request.query;
-        const providers = Object.values(PROVIDERS_LIST[type]).sort((one, two) =>
-          one.name.localeCompare(two.name),
-        );
+        const providers = Object.values(PROVIDERS_LIST[type])
+          .filter((p: any) => p.name?.toLowerCase() !== 'animeowl')
+          .sort((one, two) => one.name.localeCompare(two.name));
         reply.status(200).send(providers.map((element) => element.toString));
       },
     );

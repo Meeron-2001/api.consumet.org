@@ -312,57 +312,61 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     '/watch/:episodeId',
     async (request: FastifyRequest, reply: FastifyReply) => {
       const episodeId = (request.params as { episodeId: string }).episodeId;
-      const provider = (request.query as { provider?: string }).provider;
+      const providerQuery = (request.query as { provider?: string }).provider;
       const server = (request.query as { server?: StreamingServers }).server;
       let isDub = (request.query as { dub?: string | boolean }).dub;
 
       if (server && !Object.values(StreamingServers).includes(server))
-        return reply.status(400).send('Invalid server');
+        return reply.status(400).send({ message: 'Invalid server' });
 
-      if (isDub === 'true' || isDub === '1') isDub = true;
-      else isDub = false;
+      isDub = isDub === 'true' || isDub === '1' ? true : false;
 
-      let anilist = generateAnilistMeta(provider);
+      // Build provider attempt order, focusing on Zoro then Gogoanime
+      const defaultOrder = ['zoro', 'gogoanime'];
+      const requested = providerQuery ? [providerQuery.toLowerCase()] : [];
+      const providerOrder = Array.from(new Set([...requested, ...defaultOrder]))
+        .filter((p) => defaultOrder.includes(p));
 
-      try {
-        redis
-          ? reply
-            .status(200)
-            .send(
-              await cache.fetch(
-                redis,
-                `anilist:watch;${episodeId};${anilist.provider.name.toLowerCase()};${server};${isDub ? 'dub' : 'sub'}`,
-                async () =>
-                  provider === 'zoro'
-                    ? await anilist.fetchEpisodeSources(
-                      episodeId,
-                      server,
-                      isDub ? SubOrSub.DUB : SubOrSub.SUB,
-                    )
-                    : await anilist.fetchEpisodeSources(episodeId, server),
-                600,
-              ),
-            )
-          : reply
-            .status(200)
-            .send(
-              provider === 'zoro'
-                ? await anilist.fetchEpisodeSources(
+      const errors: Array<{ provider: string; error: string }> = [];
+
+      for (const name of providerOrder) {
+        try {
+          const anilist = generateAnilistMeta(name);
+          fastify.log.info({ name, episodeId, server, isDub }, 'Attempting provider');
+          const result =
+            name === 'zoro'
+              ? await anilist.fetchEpisodeSources(
                   episodeId,
                   server,
                   isDub ? SubOrSub.DUB : SubOrSub.SUB,
                 )
-                : await anilist.fetchEpisodeSources(episodeId, server),
-            );
+              : await anilist.fetchEpisodeSources(episodeId, server);
 
-        anilist = new META.Anilist(undefined, {
-          url: process.env.PROXY as string | string[],
-        });
-      } catch (err) {
-        reply
-          .status(500)
-          .send({ message: 'Something went wrong. Contact developer for help.' });
+          const sources = (result as any)?.sources || [];
+          const hasPlayable = Array.isArray(sources) && sources.some((s: any) => {
+            const url = s?.url || '';
+            return s?.isM3U8 === true || /\.m3u8(\?|$)/i.test(url) || /\.mp4(\?|$)/i.test(url);
+          });
+
+          if (hasPlayable) {
+            fastify.log.info({ providerUsed: name }, 'Found playable source');
+            return reply.status(200).send({ providerUsed: name, ...result });
+          }
+
+          fastify.log.warn({ name }, 'No playable sources found on provider');
+          errors.push({ provider: name, error: 'No playable sources' });
+        } catch (e: any) {
+          const msg = e?.message || String(e);
+          fastify.log.error({ err: msg, provider: name }, 'Provider fetch failed');
+          errors.push({ provider: name, error: msg });
+        }
       }
+
+      return reply.status(404).send({
+        message: 'No playable source found from available providers',
+        triedProviders: providerOrder,
+        errors,
+      });
     },
   );
 
@@ -393,16 +397,8 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
 const generateAnilistMeta = (provider: string | undefined = undefined): Anilist => {
   if (typeof provider !== 'undefined') {
-    // Block AnimeOwl to prevent runtime crashes
-    if (provider.toLowerCase() === 'animeowl') {
-      console.warn('AnimeOwl requested in meta; falling back to Gogoanime');
-      return new META.Anilist(new Gogoanime(), {
-        url: process.env.PROXY as string | string[],
-      });
-    }
-
     let possibleProvider = PROVIDERS_LIST.ANIME.find(
-      (p) => p.name.toLowerCase() === provider.toLocaleLowerCase() && p.name.toLowerCase() !== 'animeowl',
+      (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
     );
 
     if (possibleProvider instanceof NineAnime) {

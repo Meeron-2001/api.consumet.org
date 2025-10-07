@@ -1,49 +1,10 @@
-require('dotenv').config();
-
-// AGGRESSIVE FIX: Monkey-patch AnimeOwl to prevent initialization crashes
-// This MUST run before any imports of @consumet/extensions
-try {
-  // Step 1: Stub out the AnimeOwl module to prevent any execution
-  const Module = require('module');
-  const originalRequire = Module.prototype.require;
-  
-  Module.prototype.require = function(id: string) {
-    // Intercept AnimeOwl imports and return a dummy class
-    if (id && typeof id === 'string' && id.includes('animeowl')) {
-      console.log('🛡️  Blocked AnimeOwl import:', id);
-      return {
-        default: class DummyAnimeOwl {
-          constructor() {}
-          fetchSpotlight() { return Promise.resolve([]); }
-          fetchRecentEpisodes() { return Promise.resolve([]); }
-        },
-        AnimeOwl: class DummyAnimeOwl {
-          constructor() {}
-          fetchSpotlight() { return Promise.resolve([]); }
-          fetchRecentEpisodes() { return Promise.resolve([]); }
-        }
-      };
-    }
-    return originalRequire.apply(this, arguments as any);
-  };
-
-  // Step 2: Remove AnimeOwl from PROVIDERS_LIST after extensions loads
-  const { PROVIDERS_LIST } = require('@consumet/extensions');
-  if (PROVIDERS_LIST && PROVIDERS_LIST.ANIME) {
-    const beforeCount = PROVIDERS_LIST.ANIME.length;
-    PROVIDERS_LIST.ANIME = PROVIDERS_LIST.ANIME.filter(
-      (p: any) => p.name && p.name.toLowerCase() !== 'animeowl'
-    );
-    console.log(`🛡️  AnimeOwl removed from PROVIDERS_LIST.ANIME (${beforeCount} -> ${PROVIDERS_LIST.ANIME.length})`);
-  }
-} catch (e) {
-  console.warn('Could not patch AnimeOwl:', e);
-}
+import dotenv from 'dotenv';
+dotenv.config();
+ 
 
 import Redis from 'ioredis';
 import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
-import fs from 'fs';
 
 import books from './routes/books';
 import anime from './routes/anime';
@@ -57,21 +18,29 @@ import chalk from 'chalk';
 import Utils from './utils';
 
 export const redis =
-  process.env.REDIS_HOST &&
-  new Redis({
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
-    password: process.env.REDIS_PASSWORD,
-  });
+  (process.env.REDIS_URI && new Redis(process.env.REDIS_URI)) ||
+  (process.env.REDIS_HOST &&
+    new Redis({
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+      password: process.env.REDIS_PASSWORD,
+    }));
 
 const fastify = Fastify({
   maxParamLength: 1000,
   logger: true,
 });
-export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
+export const tmdbApi = process.env.TMDB_KEY || 'b424d062aa0e133deb5e46b46eb3549e';
+export const tmdbReadAccessToken =
+  process.env.TMDB_READ_ACCESS_TOKEN ||
+  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiNDI0ZDA2MmFhMGUxMzNkZWI1ZTQ2YjQ2ZWIzNTQ5ZSIsIm5iZiI6MTc1OTc4MjAwMi4xNSwic3ViIjoiNjhlNDI0NzJhMGYyNzA2NWE1MjViYWFhIiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.HyZaG2-LNCQjFCwhXTnJIIQHXKkRIWYwqdq20ayPqco';
+// Ensure the read token is available for providers that read directly from env
+if (!process.env.TMDB_READ_ACCESS_TOKEN) {
+  process.env.TMDB_READ_ACCESS_TOKEN = tmdbReadAccessToken;
+}
 
-(async () => {
-  const PORT = Number(process.env.PORT) || 3000;
+  (async () => {
+  const PORT = Number(process.env.PORT) || 10000;
 
   await fastify.register(FastifyCors, {
     origin: process.env.CORS_ORIGIN
@@ -79,27 +48,10 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
           ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
           : process.env.CORS_ORIGIN)
       : '*',
-    methods: 'GET',
+    methods: ['GET', 'OPTIONS'],
   });
 
   console.log(chalk.green(`Starting server on port ${PORT}... 🚀`));
-  
-  // Verify provider list is clean
-  try {
-    const { PROVIDERS_LIST } = require('@consumet/extensions');
-    const animeProviders = PROVIDERS_LIST.ANIME || [];
-    const hasAnimeOwl = animeProviders.some((p: any) => 
-      p.name && p.name.toLowerCase().includes('animeowl')
-    );
-    if (hasAnimeOwl) {
-      console.warn(chalk.yellowBright('⚠️  AnimeOwl still in PROVIDERS_LIST - filtering it out'));
-    } else {
-      console.log(chalk.green('✅ AnimeOwl removed successfully from providers'));
-      console.log(chalk.green(`✓  Provider list clean (${animeProviders.length} anime providers loaded)`));
-    }
-  } catch (e) {
-    console.warn(chalk.yellowBright('Could not verify provider list'));
-  }
   
   if (!process.env.REDIS_HOST)
     console.warn(chalk.yellowBright('Redis not found. Cache disabled.'));
@@ -133,7 +85,7 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
         }`,
       );
     });
-    fastify.get('*', (request, reply) => {
+    fastify.setNotFoundHandler((request, reply) => {
       reply.status(404).send({
         message: '',
         error: 'page not found',

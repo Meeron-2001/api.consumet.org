@@ -16,9 +16,13 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const page = (request.query as { page: number }).page;
     const tmdb = new META.TMDB(tmdbApi);
 
-    const res = await tmdb.search(query, page);
-
-    reply.status(200).send(res);
+    try {
+      const res = await tmdb.search(query, page);
+      reply.status(200).send(res);
+    } catch (err: any) {
+      fastify.log.error({ err: err?.message || String(err), query, page }, 'TMDB search failed');
+      reply.status(500).send({ message: 'Failed to search TMDB.' });
+    }
   });
 
   fastify.get('/info/:id', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -36,8 +40,13 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       tmdb = new META.TMDB(tmdbApi, possibleProvider);
     }
 
-    const res = await tmdb.fetchMediaInfo(id, type);
-    reply.status(200).send(res);
+    try {
+      const res = await tmdb.fetchMediaInfo(id, type);
+      reply.status(200).send(res);
+    } catch (err: any) {
+      fastify.log.error({ err: err?.message || String(err), id, type, provider }, 'TMDB info failed');
+      reply.status(500).send({ message: 'Failed to fetch TMDB media info.' });
+    }
   });
 
   fastify.get('/trending', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -80,15 +89,11 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       tmdb = new META.TMDB(tmdbApi, possibleProvider);
     }
     try {
-      const res = await tmdb
-        .fetchEpisodeSources(episodeId, id, server)
-        .catch((err) => reply.status(404).send({ message: err }));
-
+      const res = await tmdb.fetchEpisodeSources(episodeId, id, server);
       reply.status(200).send(res);
-    } catch (err) {
-      reply
-        .status(500)
-        .send({ message: 'Something went wrong. Contact developer for help.' });
+    } catch (err: any) {
+      fastify.log.error({ err: err?.message || String(err), episodeId, id, server, provider }, 'TMDB watch failed');
+      reply.status(500).send({ message: 'Failed to fetch TMDB episode sources.' });
     }
   };
   fastify.get('/watch', watch);

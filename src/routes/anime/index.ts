@@ -29,34 +29,19 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/', async (request: any, reply: any) => {
     reply.status(200).send('Welcome to Consumet Anime 🗾');
   });
-  // Diagnose AnimeOwl without importing it (no runtime crash)
-  fastify.get('/ping-animeowl', async (_: FastifyRequest, reply: FastifyReply) => {
-    // AnimeOwl is intentionally not loaded; report as unreachable in a controlled way
-    reply.status(200).send({ success: false, reachable: false, message: 'AnimeOwl disabled' });
-  });
+  // Anime providers root
 
   fastify.get('/:animeProvider', async (request: FastifyRequest, reply: FastifyReply) => {
-    const queries: { animeProvider: string; page: number } = {
-      animeProvider: '',
-      page: 1,
-    };
+    const providerName = decodeURIComponent(
+      (request.params as { animeProvider: string }).animeProvider,
+    ).toLowerCase();
 
-    queries.animeProvider = decodeURIComponent(
-      (request.params as { animeProvider: string; page: number }).animeProvider,
-    );
-
-    queries.page = (request.query as { animeProvider: string; page: number }).page;
-
-    if (queries.page! < 1) queries.page = 1;
-
-    // Special-case: if animeowl is requested, fallback to gogoanime
-    if (queries.animeProvider.toLowerCase() === 'animeowl') {
-      fastify.log.warn('AnimeOwl requested; falling back to gogoanime');
-      return reply.redirect('/anime/gogoanime');
-    }
-
+    const registered = new Set(['gogoanime', 'zoro']);
     const provider = PROVIDERS_LIST.ANIME.find(
-      (provider: any) => provider.toString.name === queries.animeProvider && provider.toString.name.toLowerCase() !== 'animeowl',
+      (p: any) =>
+        p.toString.name &&
+        registered.has(p.toString.name.toLowerCase()) &&
+        p.toString.name.toLowerCase() === providerName,
     );
 
     try {
