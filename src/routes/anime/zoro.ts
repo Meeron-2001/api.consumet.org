@@ -1,9 +1,9 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { ANIME } from '@consumet/extensions';
+import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
 import { StreamingServers, SubOrSub } from '@consumet/extensions/dist/models';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const zoro = new ANIME.Zoro(process.env.ZORO_URL);
+  const zoro = new Zoro(process.env.ZORO_URL);
   let baseUrl = 'https://hianime.to';
   if (process.env.ZORO_URL) {
     baseUrl = `https://${process.env.ZORO_URL}`;

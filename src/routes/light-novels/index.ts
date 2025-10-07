@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { PROVIDERS_LIST } from '@consumet/extensions';
 
 import readlightnovels from './readlightnovels';
 
@@ -27,13 +26,12 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
       if (queries.page! < 1) queries.page = 1;
 
-      const provider = PROVIDERS_LIST.LIGHT_NOVELS.find(
-        (provider: any) => provider.toString.name === queries.lightNovelProvider,
-      );
+      const allowed = new Set(['readlightnovels']);
 
       try {
-        if (provider) {
-          reply.redirect(`/light-novels/${provider.toString.name}`);
+        const key = queries.lightNovelProvider.toLowerCase();
+        if (allowed.has(key)) {
+          reply.redirect(`/light-novels/${key}`);
         } else {
           reply
             .status(404)

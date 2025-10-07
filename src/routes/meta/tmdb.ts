@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META, PROVIDERS_LIST, StreamingServers } from '@consumet/extensions';
+import { META } from '@consumet/extensions';
+import { StreamingServers } from '@consumet/extensions/dist/models';
 import { tmdbApi } from '../../main';
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/', (_, rp) => {
@@ -33,12 +34,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
     if (!type) return reply.status(400).send({ message: "The 'type' query is required" });
 
-    if (typeof provider !== 'undefined') {
-      const possibleProvider = PROVIDERS_LIST.MOVIES.find(
-        (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-      );
-      tmdb = new META.TMDB(tmdbApi, possibleProvider);
-    }
+    // Provider override disabled to avoid loading provider registry; default TMDB is used
 
     try {
       const res = await tmdb.fetchMediaInfo(id, type);
@@ -82,12 +78,6 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const server = (request.query as { server?: StreamingServers }).server;
 
     let tmdb = new META.TMDB(tmdbApi);
-    if (typeof provider !== 'undefined') {
-      const possibleProvider = PROVIDERS_LIST.MOVIES.find(
-        (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-      );
-      tmdb = new META.TMDB(tmdbApi, possibleProvider);
-    }
     try {
       const res = await tmdb.fetchEpisodeSources(episodeId, id, server);
       reply.status(200).send(res);

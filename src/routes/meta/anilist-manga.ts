@@ -1,6 +1,5 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
 import { META } from '@consumet/extensions';
-import { PROVIDERS_LIST } from '@consumet/extensions';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   // TODO: Allocate new provider per request rather
@@ -27,13 +26,6 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const id = (request.params as { id: string }).id;
     const provider = (request.query as { provider: string }).provider;
 
-    if (typeof provider !== 'undefined') {
-      const possibleProvider = PROVIDERS_LIST.MANGA.find(
-        (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-      );
-      anilist = new META.Anilist.Manga(possibleProvider);
-    }
-
     if (typeof id === 'undefined')
       return reply.status(400).send({ message: 'id is required' });
 
@@ -54,13 +46,6 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/read', async (request: FastifyRequest, reply: FastifyReply) => {
     const chapterId = (request.query as { chapterId: string }).chapterId;
     const provider = (request.query as { provider: string }).provider;
-
-    if (typeof provider !== 'undefined') {
-      const possibleProvider = PROVIDERS_LIST.MANGA.find(
-        (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-      );
-      anilist = new META.Anilist.Manga(possibleProvider);
-    }
 
     if (typeof chapterId === 'undefined')
       return reply.status(400).send({ message: 'chapterId is required' });

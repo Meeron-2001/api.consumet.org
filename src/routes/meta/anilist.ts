@@ -1,13 +1,12 @@
 import { Redis } from 'ioredis';
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { ANIME, META, PROVIDERS_LIST } from '@consumet/extensions';
+import { META } from '@consumet/extensions';
 import { Genres, SubOrSub } from '@consumet/extensions/dist/models';
 import Anilist from '@consumet/extensions/dist/providers/meta/anilist';
 import { StreamingServers } from '@consumet/extensions/dist/models';
 
 import cache from '../../utils/cache';
 import { redis } from '../../main';
-import NineAnime from '@consumet/extensions/dist/providers/anime/9anime';
 import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
 import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 
@@ -173,15 +172,24 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get(
     '/recent-episodes',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const provider = (request.query as { provider: 'zoro' }).provider;
+      const providerRaw = (request.query as { provider?: string }).provider;
       const page = (request.query as { page: number }).page;
       const perPage = (request.query as { perPage: number }).perPage;
 
+      const allowed = new Set(['zoro', 'gogoanime']);
+      const provider = providerRaw && allowed.has(providerRaw.toLowerCase())
+        ? providerRaw.toLowerCase()
+        : 'zoro';
+
       const anilist = generateAnilistMeta(provider);
 
-      const res = await anilist.fetchRecentEpisodes(provider, page, perPage);
-
-      reply.status(200).send(res);
+      try {
+        const res = await anilist.fetchRecentEpisodes(provider, page, perPage);
+        reply.status(200).send(res);
+      } catch (err: any) {
+        fastify.log.error({ err: err?.message || err, provider }, 'recent-episodes failed');
+        reply.status(500).send({ message: 'Provider failed: ' + (err?.message || String(err)) });
+      }
     },
   ),
     fastify.get('/random-anime', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -195,14 +203,22 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
   fastify.get('/servers/:id', async (request: FastifyRequest, reply: FastifyReply) => {
     const id = (request.params as { id: string }).id;
-    const provider = (request.query as { provider?: string }).provider;
+    const providerRaw = (request.query as { provider?: string }).provider;
 
-    let anilist = generateAnilistMeta(provider);
+    const allowed = new Set(['zoro', 'gogoanime']);
+    const provider = providerRaw && allowed.has(providerRaw.toLowerCase())
+      ? providerRaw.toLowerCase()
+      : 'zoro';
 
-    const res = await anilist.fetchEpisodeServers(id);
+    const anilist = generateAnilistMeta(provider);
 
-    anilist = new META.Anilist();
-    reply.status(200).send(res);
+    try {
+      const res = await anilist.fetchEpisodeServers(id);
+      reply.status(200).send(res);
+    } catch (err: any) {
+      fastify.log.error({ err: err?.message || err, provider }, 'servers failed');
+      reply.status(500).send({ message: 'Provider failed: ' + (err?.message || String(err)) });
+    }
   });
 
   fastify.get('/episodes/:id', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -396,36 +412,25 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 };
 
 const generateAnilistMeta = (provider: string | undefined = undefined): Anilist => {
-  if (typeof provider !== 'undefined') {
-    let possibleProvider = PROVIDERS_LIST.ANIME.find(
-      (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-    );
-
-    if (possibleProvider instanceof NineAnime) {
-      possibleProvider = new ANIME.NineAnime(
-        process.env?.NINE_ANIME_HELPER_URL,
-        {
-          url: process.env?.NINE_ANIME_PROXY as string,
-        },
-        process.env?.NINE_ANIME_HELPER_KEY as string,
-      );
-    }
-
-    return new META.Anilist(possibleProvider, {
-      url: process.env.PROXY as string | string[],
-    });
-  } else {
-    // default provider is Zoro; fallback to Gogoanime if Zoro initialization fails
-    let defaultProvider;
-    try {
-      defaultProvider = new Zoro();
-    } catch (e) {
-      defaultProvider = new Gogoanime();
-    }
-    return new Anilist(defaultProvider, {
-      url: process.env.PROXY as string | string[],
-    });
+  let selected: any;
+  const name = provider?.toLowerCase();
+  if (name === 'gogoanime') {
+    selected = new Gogoanime(process.env.GOGOANIME_URL);
+  } else if (name === 'zoro') {
+    selected = new Zoro(process.env.ZORO_URL);
   }
+
+  if (!selected) {
+    try {
+      selected = new Zoro(process.env.ZORO_URL);
+    } catch (e) {
+      selected = new Gogoanime(process.env.GOGOANIME_URL);
+    }
+  }
+
+  return new META.Anilist(selected, {
+    url: process.env.PROXY as string | string[],
+  });
 };
 
 export default routes;

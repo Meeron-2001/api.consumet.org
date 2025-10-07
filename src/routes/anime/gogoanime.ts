@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { ANIME } from '@consumet/extensions';
+import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 import { StreamingServers } from '@consumet/extensions/dist/models';
 import cache from '../../utils/cache';
 import { redis } from '../../main';
 import { Redis } from 'ioredis';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const gogoanime = new ANIME.Gogoanime(process.env.GOGOANIME_URL);
+  const gogoanime = new Gogoanime(process.env.GOGOANIME_URL);
   const redisCacheTime = 60 * 60;
   const redisPrefix = 'gogoanime:';
 

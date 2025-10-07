@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { PROVIDERS_LIST } from '@consumet/extensions';
 
 import gogoanime from './gogoanime';
 import zoro from './zoro';
@@ -45,16 +44,9 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     ).toLowerCase();
 
     const registered = new Set(['gogoanime', 'zoro']);
-    const provider = PROVIDERS_LIST.ANIME.find(
-      (p: any) =>
-        p.toString.name &&
-        registered.has(p.toString.name.toLowerCase()) &&
-        p.toString.name.toLowerCase() === providerName,
-    );
-
     try {
-      if (provider) {
-        reply.redirect(`/anime/${provider.toString.name}`);
+      if (registered.has(providerName)) {
+        reply.redirect(`/anime/${providerName}`);
       } else {
         reply
           .status(404)

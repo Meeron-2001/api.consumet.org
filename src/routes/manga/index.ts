@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { PROVIDERS_LIST } from '@consumet/extensions';
 import mangapill from './mangapill';
 import managreader from './managreader';
 import mangadex from './mangadex';
@@ -33,13 +32,19 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
     if (queries.page! < 1) queries.page = 1;
 
-    const provider = PROVIDERS_LIST.MANGA.find(
-      (provider: any) => provider.toString.name === queries.mangaProvider,
-    );
+    const allowed = new Set([
+      'mangadex',
+      'mangahere',
+      'mangakakalot',
+      'mangasee123',
+      'mangapill',
+      'managreader',
+      'mangapark',
+    ]);
 
     try {
-      if (provider) {
-        reply.redirect(`/manga/${provider.toString.name}`);
+      if (allowed.has(queries.mangaProvider.toLowerCase())) {
+        reply.redirect(`/manga/${queries.mangaProvider.toLowerCase()}`);
       } else {
         reply
           .status(404)

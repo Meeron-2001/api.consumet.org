@@ -1,5 +1,7 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META, PROVIDERS_LIST } from '@consumet/extensions';
+import { META } from '@consumet/extensions';
+import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
+import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   let mal = new META.Myanimelist();
@@ -34,11 +36,11 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const locale = (request.query as { locale?: string }).locale;
 
     if (typeof provider !== 'undefined') {
-      const possibleProvider = PROVIDERS_LIST.ANIME.find(
-        (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-      );
-
-      mal = new META.Myanimelist(possibleProvider);
+      const name = provider.toLowerCase();
+      const selected = name === 'gogoanime'
+        ? new Gogoanime(process.env.GOGOANIME_URL)
+        : new Zoro(process.env.ZORO_URL);
+      mal = new META.Myanimelist(selected);
     }
 
     if (isDub === 'true' || isDub === '1') isDub = true;
@@ -64,11 +66,11 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       const provider = (request.query as { provider?: string }).provider;
 
       if (typeof provider !== 'undefined') {
-        const possibleProvider = PROVIDERS_LIST.ANIME.find(
-          (p) => p.name.toLowerCase() === provider.toLocaleLowerCase(),
-        );
-
-        mal = new META.Myanimelist(possibleProvider);
+        const name = provider.toLowerCase();
+        const selected = name === 'gogoanime'
+          ? new Gogoanime(process.env.GOGOANIME_URL)
+          : new Zoro(process.env.ZORO_URL);
+        mal = new META.Myanimelist(selected);
       }
       try {
         const res = await mal

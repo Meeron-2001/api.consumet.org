@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { PROVIDERS_LIST } from '@consumet/extensions';
 
 import flixhq from './flixhq';
 import viewasian from './viewasian';
@@ -38,13 +37,21 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
     if (queries.page! < 1) queries.page = 1;
 
-    const provider = PROVIDERS_LIST.MOVIES.find(
-      (provider: any) => provider.toString.name === queries.movieProvider,
-    );
+    const allowed = new Set([
+      'flixhq',
+      'viewasian',
+      'dramacool',
+      'fmovies',
+      'goku',
+      'movieshd',
+      'sflix',
+      'multimovies',
+    ]);
 
     try {
-      if (provider) {
-        reply.redirect(`/movies/${provider.toString.name}`);
+      const key = queries.movieProvider.toLowerCase();
+      if (allowed.has(key)) {
+        reply.redirect(`/movies/${key}`);
       } else {
         reply
           .status(404)

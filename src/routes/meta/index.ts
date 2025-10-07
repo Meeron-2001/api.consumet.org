@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { PROVIDERS_LIST } from '@consumet/extensions';
 
 import anilist from './anilist';
 import anilistManga from './anilist-manga';
@@ -20,13 +19,12 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       (request.params as { metaProvider: string }).metaProvider,
     ).toLowerCase();
 
-    const provider = PROVIDERS_LIST.META.find(
-      (p: any) => p.toString.name && p.toString.name.toLowerCase() === metaProvider,
-    );
+    const allowed = new Set(['anilist', 'anilist-manga', 'mal', 'tmdb']);
 
     try {
-      if (provider) {
-        reply.redirect(`/meta/${provider.toString.name}`);
+      if (allowed.has(metaProvider)) {
+        // redirect to known route
+        reply.redirect(`/meta/${metaProvider}`);
       } else {
         reply
           .status(404)
