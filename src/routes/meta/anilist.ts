@@ -10,6 +10,8 @@ import { redis } from '../../main';
 import Zoro from '@consumet/extensions/dist/providers/anime/zoro';
 import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
 
+type AllowedProvider = 'zoro' | 'gogoanime';
+
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
@@ -176,10 +178,10 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       const page = (request.query as { page: number }).page;
       const perPage = (request.query as { perPage: number }).perPage;
 
-      const allowed = new Set(['zoro', 'gogoanime']);
-      const provider = providerRaw && allowed.has(providerRaw.toLowerCase())
-        ? providerRaw.toLowerCase()
-        : 'zoro';
+      const provider: AllowedProvider =
+        providerRaw && (providerRaw.toLowerCase() === 'zoro' || providerRaw.toLowerCase() === 'gogoanime')
+          ? (providerRaw.toLowerCase() as AllowedProvider)
+          : 'zoro';
 
       const anilist = generateAnilistMeta(provider);
 
@@ -205,10 +207,10 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     const id = (request.params as { id: string }).id;
     const providerRaw = (request.query as { provider?: string }).provider;
 
-    const allowed = new Set(['zoro', 'gogoanime']);
-    const provider = providerRaw && allowed.has(providerRaw.toLowerCase())
-      ? providerRaw.toLowerCase()
-      : 'zoro';
+    const provider: AllowedProvider =
+      providerRaw && (providerRaw.toLowerCase() === 'zoro' || providerRaw.toLowerCase() === 'gogoanime')
+        ? (providerRaw.toLowerCase() as AllowedProvider)
+        : 'zoro';
 
     const anilist = generateAnilistMeta(provider);
 
